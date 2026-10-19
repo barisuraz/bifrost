@@ -568,6 +568,7 @@ var configstoreMigrationSteps = []migrationStep{
 	{IDs: []string{"add_agent_destination_policy_columns"}, run: migrationAddAgentDestinationPolicyColumns},
 	{IDs: []string{"drop_agent_registration_options"}, run: migrationDropAgentRegistrationOptions},
 	{IDs: []string{"add_vertex_use_session_routing_column"}, run: migrationAddVertexUseSessionRoutingColumn},
+	{IDs: []string{"add_client_config_skip_access_profile_user_virtual_keys_column"}, run: migrationAddClientConfigSkipAccessProfileUserVirtualKeysColumn},
 	{IDs: []string{"add_rss_feeds_table"}, run: migrationAddRSSFeedsTable},
 	{IDs: []string{"add_rss_feeds_icon_url_column"}, run: migrationAddRSSFeedsIconURLColumn},
 }
@@ -16344,6 +16345,29 @@ func migrationAddVertexUseSessionRoutingColumn(ctx context.Context, db *gorm.DB,
 		Rollback: func(tx *gorm.DB) error {
 			tx = tx.WithContext(ctx)
 			return dropColumnIfExists(tx, logger, &tables.TableKey{}, "vertex_use_session_routing")
+		},
+	}})
+	if err := m.Migrate(); err != nil {
+		return fmt.Errorf("error running %s migration: %w", migrationName, err)
+	}
+	return nil
+}
+
+// migrationAddClientConfigSkipAccessProfileUserVirtualKeysColumn adds skip_access_profile_user_virtual_keys
+// to config_client. Existing rows default to false, keeping access profiles managing user keys.
+func migrationAddClientConfigSkipAccessProfileUserVirtualKeysColumn(ctx context.Context, db *gorm.DB, logger schemas.Logger) error {
+	migrationName := "add_client_config_skip_access_profile_user_virtual_keys_column"
+	logger.Info("[configstore] starting migration %s", migrationName)
+	defer logger.Info("[configstore] finished migration %s", migrationName)
+	m := migrator.New(db, migrator.DefaultOptions, []*migrator.Migration{{
+		ID: migrationName,
+		Migrate: func(tx *gorm.DB) error {
+			tx = tx.WithContext(ctx)
+			return addColumnIfNotExists(tx, logger, &tables.TableClientConfig{}, "skip_access_profile_user_virtual_keys")
+		},
+		Rollback: func(tx *gorm.DB) error {
+			tx = tx.WithContext(ctx)
+			return dropColumnIfExists(tx, logger, &tables.TableClientConfig{}, "skip_access_profile_user_virtual_keys")
 		},
 	}})
 	if err := m.Migrate(); err != nil {
