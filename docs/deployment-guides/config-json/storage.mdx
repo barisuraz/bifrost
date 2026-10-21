@@ -335,6 +335,10 @@ Set `matview_refresh_interval` (Go duration string) to slow down refreshes when 
 | Field | Default | Description |
 |-------|---------|-------------|
 | `matview_refresh_interval` | `"1m"` | How often to refresh dashboard materialized views. Accepts any Go duration string (`"1m"`, `"5m"`, `"1h"`); positive values below `5s` are clamped up to `5s`. Set `"off"` or a zero duration (`"0s"`) to disable matview maintenance entirely. |
+| `matview_refresh_timeout` | 5x the interval, at least `"5m"` | Maximum time for one refresh pass (min `30s`, max `30m`). The database also enforces it, so a pass started by a pod that was killed still stops shortly after this time. A pass that times out leaves the views intact but staler. If passes keep timing out, Bifrost logs an error: raise this value or turn maintenance off. |
+| `matview_refresh_temp_file_limit` | unset | Caps the temp files one materialized view statement may write (Postgres `temp_file_limit`, for example `"20GB"`). A refresh over a very large `logs` table can spill tens of GB, and a full disk fails every query on the server. A statement that hits the cap fails and the view keeps its previous contents. The database role needs superuser or `GRANT SET ON PARAMETER temp_file_limit TO <role>`; without it the cap is skipped with a warning. |
+
+When a pod stops (restart, scale-down, eviction), it cancels its running refresh and releases the refresh lock before exiting. If a pod is killed without warning, the database notices the lost connection within about 10 seconds and stops the refresh, so it does not keep running or hold the lock for other replicas.
 
 **Notes**
 

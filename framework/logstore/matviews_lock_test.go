@@ -27,7 +27,7 @@ func TestResolveMatViewRefreshIntervalDefaults(t *testing.T) {
 func TestStartMatViewRefresherDisabled(t *testing.T) {
 	// A disabled interval must not start a ticker (time.NewTicker panics on
 	// non-positive intervals); the returned stop function is a no-op.
-	stop := startMatViewRefresher(context.Background(), nil, 0, time.Minute, testLogger{}, nil)
+	stop := startMatViewRefresher(context.Background(), nil, 0, time.Minute, testLogger{}, nil, matViewSessionLimits{})
 	stop()
 }
 
@@ -300,7 +300,7 @@ func TestMatViewRefreshTickSkippedWhileMigrating(t *testing.T) {
 	gate := &migrationLockProbe{now: func() time.Time { return now }, checkedAt: now, held: true}
 	var ready atomic.Bool
 	require.NotPanics(t, func() {
-		runMatViewRefreshTick(context.Background(), nil, gate, time.Minute, time.Minute, testLogger{}, &ready)
+		runMatViewRefreshTick(context.Background(), nil, gate, time.Minute, time.Minute, testLogger{}, &ready, nil)
 	})
 	assert.False(t, ready.Load(), "a skipped tick must not mark the matviews ready")
 }
