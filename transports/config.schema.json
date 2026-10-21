@@ -6794,6 +6794,54 @@
       ],
       "additionalProperties": false
     },
+    "passthrough_policy": {
+      "type": "object",
+      "description": "Routes the HTTP passthrough endpoints (/openai_passthrough, /anthropic_passthrough, /azure_passthrough, /genai_passthrough, /bedrock_passthrough) forward to this provider. Omit to use the default: a built-in provider forwards every route, a custom provider forwards none. An empty allowed_routes forwards nothing. A custom provider is reached on its base provider's route with the x-model-provider header, once it has a policy.",
+      "properties": {
+        "allowed_routes": {
+          "type": "array",
+          "description": "Routes forwarded to the provider. A request is forwarded when any rule allows it.",
+          "items": {
+            "$ref": "#/$defs/passthrough_route_rule"
+          }
+        }
+      },
+      "required": [
+        "allowed_routes"
+      ],
+      "additionalProperties": false
+    },
+    "passthrough_route_rule": {
+      "type": "object",
+      "description": "One allowed route: a path with optional methods.",
+      "properties": {
+        "methods": {
+          "type": "array",
+          "description": "HTTP methods the rule allows. Omit to allow any method.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE",
+              "HEAD",
+              "OPTIONS"
+            ]
+          }
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^(?:/|/\\*\\*|(?:/(?:(?:[^/?#%\\\\\\[\\]*]|\\*[^/?#%\\\\\\[\\]*])+\\*?|\\*))+(?:/\\*\\*)?)$",
+          "description": "Path after the route prefix, as the client calls it. * matches within one segment; a final /** matches the path and everything below it."
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
     "concurrency_and_buffer_size": {
       "type": "object",
       "properties": {
@@ -7749,6 +7797,9 @@
         "injected_tools": {
           "$ref": "#/$defs/injected_tools"
         },
+        "passthrough": {
+          "$ref": "#/$defs/passthrough_policy"
+        },
         "custom_provider_config": {
           "$ref": "#/$defs/custom_provider_config"
         }
@@ -7796,6 +7847,9 @@
         },
         "injected_tools": {
           "$ref": "#/$defs/injected_tools"
+        },
+        "passthrough": {
+          "$ref": "#/$defs/passthrough_policy"
         },
         "custom_provider_config": {
           "$ref": "#/$defs/custom_provider_config"
@@ -7845,6 +7899,9 @@
         "injected_tools": {
           "$ref": "#/$defs/injected_tools"
         },
+        "passthrough": {
+          "$ref": "#/$defs/passthrough_policy"
+        },
         "custom_provider_config": {
           "$ref": "#/$defs/custom_provider_config"
         }
@@ -7892,6 +7949,9 @@
         },
         "injected_tools": {
           "$ref": "#/$defs/injected_tools"
+        },
+        "passthrough": {
+          "$ref": "#/$defs/passthrough_policy"
         },
         "custom_provider_config": {
           "$ref": "#/$defs/custom_provider_config"
@@ -7941,6 +8001,9 @@
         "injected_tools": {
           "$ref": "#/$defs/injected_tools"
         },
+        "passthrough": {
+          "$ref": "#/$defs/passthrough_policy"
+        },
         "custom_provider_config": {
           "$ref": "#/$defs/custom_provider_config"
         }
@@ -7988,6 +8051,9 @@
         },
         "injected_tools": {
           "$ref": "#/$defs/injected_tools"
+        },
+        "passthrough": {
+          "$ref": "#/$defs/passthrough_policy"
         },
         "custom_provider_config": {
           "$ref": "#/$defs/custom_provider_config"
@@ -8037,6 +8103,9 @@
         "injected_tools": {
           "$ref": "#/$defs/injected_tools"
         },
+        "passthrough": {
+          "$ref": "#/$defs/passthrough_policy"
+        },
         "custom_provider_config": {
           "$ref": "#/$defs/custom_provider_config"
         }
@@ -8084,6 +8153,9 @@
         },
         "injected_tools": {
           "$ref": "#/$defs/injected_tools"
+        },
+        "passthrough": {
+          "$ref": "#/$defs/passthrough_policy"
         },
         "custom_provider_config": {
           "$ref": "#/$defs/custom_provider_config"
@@ -8133,6 +8205,9 @@
         "injected_tools": {
           "$ref": "#/$defs/injected_tools"
         },
+        "passthrough": {
+          "$ref": "#/$defs/passthrough_policy"
+        },
         "custom_provider_config": {
           "$ref": "#/$defs/custom_provider_config"
         }
@@ -8181,6 +8256,9 @@
         "injected_tools": {
           "$ref": "#/$defs/injected_tools"
         },
+        "passthrough": {
+          "$ref": "#/$defs/passthrough_policy"
+        },
         "custom_provider_config": {
           "$ref": "#/$defs/custom_provider_config"
         }
@@ -8225,6 +8303,9 @@
         },
         "injected_tools": {
           "$ref": "#/$defs/injected_tools"
+        },
+        "passthrough": {
+          "$ref": "#/$defs/passthrough_policy"
         },
         "custom_provider_config": {
           "$ref": "#/$defs/custom_provider_config"
@@ -8271,6 +8352,9 @@
         "injected_tools": {
           "$ref": "#/$defs/injected_tools"
         },
+        "passthrough": {
+          "$ref": "#/$defs/passthrough_policy"
+        },
         "custom_provider_config": {
           "$ref": "#/$defs/custom_provider_config"
         }
@@ -8315,6 +8399,9 @@
         },
         "injected_tools": {
           "$ref": "#/$defs/injected_tools"
+        },
+        "passthrough": {
+          "$ref": "#/$defs/passthrough_policy"
         },
         "custom_provider_config": {
           "$ref": "#/$defs/custom_provider_config"
@@ -8363,6 +8450,9 @@
         },
         "injected_tools": {
           "$ref": "#/$defs/injected_tools"
+        },
+        "passthrough": {
+          "$ref": "#/$defs/passthrough_policy"
         },
         "custom_provider_config": {
           "$ref": "#/$defs/custom_provider_config"
