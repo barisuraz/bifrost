@@ -127144,6 +127144,30 @@
                         "type": "number",
                         "minimum": 0
                       },
+                      "units_path": {
+                        "type": "string",
+                        "description": "gjson path of the billable quantity (pages, credits, text); ignored for body_bytes"
+                      },
+                      "units_source": {
+                        "type": "string",
+                        "enum": [
+                          "response",
+                          "request"
+                        ]
+                      },
+                      "units_measure": {
+                        "type": "string",
+                        "enum": [
+                          "value",
+                          "chars",
+                          "body_bytes"
+                        ]
+                      },
+                      "cost_per_unit": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "USD per unit; cost = units * cost_per_unit + cost_per_request + extracted cost"
+                      },
                       "disable_optimistic_parsing": {
                         "type": "boolean"
                       }
@@ -127218,6 +127242,30 @@
                             "cost_per_request": {
                               "type": "number",
                               "minimum": 0
+                            },
+                            "units_path": {
+                              "type": "string",
+                              "description": "gjson path of the billable quantity (pages, credits, text); ignored for body_bytes"
+                            },
+                            "units_source": {
+                              "type": "string",
+                              "enum": [
+                                "response",
+                                "request"
+                              ]
+                            },
+                            "units_measure": {
+                              "type": "string",
+                              "enum": [
+                                "value",
+                                "chars",
+                                "body_bytes"
+                              ]
+                            },
+                            "cost_per_unit": {
+                              "type": "number",
+                              "minimum": 0,
+                              "description": "USD per unit; cost = units * cost_per_unit + cost_per_request + extracted cost"
                             },
                             "disable_optimistic_parsing": {
                               "type": "boolean"
@@ -127577,6 +127625,30 @@
                         "type": "number",
                         "minimum": 0
                       },
+                      "units_path": {
+                        "type": "string",
+                        "description": "gjson path of the billable quantity (pages, credits, text); ignored for body_bytes"
+                      },
+                      "units_source": {
+                        "type": "string",
+                        "enum": [
+                          "response",
+                          "request"
+                        ]
+                      },
+                      "units_measure": {
+                        "type": "string",
+                        "enum": [
+                          "value",
+                          "chars",
+                          "body_bytes"
+                        ]
+                      },
+                      "cost_per_unit": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "USD per unit; cost = units * cost_per_unit + cost_per_request + extracted cost"
+                      },
                       "disable_optimistic_parsing": {
                         "type": "boolean"
                       }
@@ -127651,6 +127723,30 @@
                             "cost_per_request": {
                               "type": "number",
                               "minimum": 0
+                            },
+                            "units_path": {
+                              "type": "string",
+                              "description": "gjson path of the billable quantity (pages, credits, text); ignored for body_bytes"
+                            },
+                            "units_source": {
+                              "type": "string",
+                              "enum": [
+                                "response",
+                                "request"
+                              ]
+                            },
+                            "units_measure": {
+                              "type": "string",
+                              "enum": [
+                                "value",
+                                "chars",
+                                "body_bytes"
+                              ]
+                            },
+                            "cost_per_unit": {
+                              "type": "number",
+                              "minimum": 0,
+                              "description": "USD per unit; cost = units * cost_per_unit + cost_per_request + extracted cost"
                             },
                             "disable_optimistic_parsing": {
                               "type": "boolean"
@@ -127968,6 +128064,30 @@
                         "type": "number",
                         "minimum": 0
                       },
+                      "units_path": {
+                        "type": "string",
+                        "description": "gjson path of the billable quantity (pages, credits, text); ignored for body_bytes"
+                      },
+                      "units_source": {
+                        "type": "string",
+                        "enum": [
+                          "response",
+                          "request"
+                        ]
+                      },
+                      "units_measure": {
+                        "type": "string",
+                        "enum": [
+                          "value",
+                          "chars",
+                          "body_bytes"
+                        ]
+                      },
+                      "cost_per_unit": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "USD per unit; cost = units * cost_per_unit + cost_per_request + extracted cost"
+                      },
                       "disable_optimistic_parsing": {
                         "type": "boolean"
                       }
@@ -128042,6 +128162,30 @@
                             "cost_per_request": {
                               "type": "number",
                               "minimum": 0
+                            },
+                            "units_path": {
+                              "type": "string",
+                              "description": "gjson path of the billable quantity (pages, credits, text); ignored for body_bytes"
+                            },
+                            "units_source": {
+                              "type": "string",
+                              "enum": [
+                                "response",
+                                "request"
+                              ]
+                            },
+                            "units_measure": {
+                              "type": "string",
+                              "enum": [
+                                "value",
+                                "chars",
+                                "body_bytes"
+                              ]
+                            },
+                            "cost_per_unit": {
+                              "type": "number",
+                              "minimum": 0,
+                              "description": "USD per unit; cost = units * cost_per_unit + cost_per_request + extracted cost"
                             },
                             "disable_optimistic_parsing": {
                               "type": "boolean"
