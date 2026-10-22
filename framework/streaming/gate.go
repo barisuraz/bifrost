@@ -621,6 +621,23 @@ func (sa *StreamAccumulator) End(err *schemas.BifrostError) {
 	}
 }
 
+// sendStreamCommitMarker tells the core's waiting first-chunk check that the upstream has
+// produced valid output while a plugin holds it. Without it the check waits for the first
+// delivered chunk, which a buffering plugin releases only once the whole upstream response
+// is in, so the transport writes no byte (not even headers) and a proxy idle timeout in
+// front of Bifrost cuts the request. Sent outside sa.mu: the check is the receiver, and a
+// flusher racing it is harmless because every forwarder past the check drops the marker.
+func sendStreamCommitMarker(ch chan *schemas.BifrostStreamChunk, ctx *schemas.BifrostContext) {
+	defer func() {
+		// The channel may already be closed by a consumer that abandoned it.
+		_ = recover()
+	}()
+	select {
+	case ch <- schemas.StreamCommitMarker():
+	case <-ctx.Done():
+	}
+}
+
 // GateSend implements the per-chunk delivery gate.
 //
 //   - Active state: chunk is forwarded to ch (with ctx.Done() guard).
@@ -696,6 +713,9 @@ func (sa *StreamAccumulator) GateSend(chunk *schemas.BifrostStreamChunk, isFinal
 			}
 		}
 		sa.mu.Unlock()
+		if !isHardErr && chunk != nil && chunk.BifrostError == nil && ctx != nil && ctx.ConsumeStreamCommitWatch() {
+			sendStreamCommitMarker(ch, ctx)
+		}
 		return true
 	}
 

@@ -7457,7 +7457,12 @@ func executeRequestWithRetries[T any](
 			}
 		}
 
-		// Attempt the request
+		// Attempt the request. For streams, arm the commit watch first: a plugin that holds
+		// the stream may buffer the very first chunk before requestHandler returns, and only
+		// an armed watch lets the gate tell the first-chunk check that output has started.
+		if isStreamRequest {
+			ctx.ArmStreamCommitWatch()
+		}
 		result, bifrostError = requestHandler(currentKey)
 
 		// Detect errors carried inside HTTP 200 streams before returning success.
@@ -7509,6 +7514,9 @@ func executeRequestWithRetries[T any](
 					result = any(checkedStream).(T)
 				}
 			}
+		}
+		if isStreamRequest {
+			ctx.DisarmStreamCommitWatch()
 		}
 		if attemptAbort != nil {
 			bifrostError = settleAttemptAbort(ctx, attemptAbort, bifrostError, providerKey, model)

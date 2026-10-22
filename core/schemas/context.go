@@ -40,6 +40,7 @@ var reservedKeys = map[BifrostContextKey]struct{}{
 	BifrostContextKeyAttemptTrail:            {},
 	BifrostContextKeyStreamGated:             {},
 	BifrostContextKeyStreamAttemptAbort:      {},
+	BifrostContextKeyStreamCommitWatch:       {},
 	BifrostContextKeyMCPHealthCheckRequest:   {},
 	BifrostContextKeyMCPUnattendedExecution:  {},
 	BifrostContextKeyInjectedToolsExecuted:   {},
@@ -604,6 +605,35 @@ func (bc *BifrostContext) setReservedValue(key, value any) {
 		bc.userValues = make(map[any]any, 16)
 	}
 	bc.userValues[key] = value
+}
+
+// ArmStreamCommitWatch marks that the first-chunk check of the current stream attempt is
+// waiting, so the pause/resume gate may signal a held stream as started (see
+// StreamCommitMarker). Bifrost-internal (set by core - DO NOT CALL THIS MANUALLY).
+func (bc *BifrostContext) ArmStreamCommitWatch() {
+	bc.setReservedValue(BifrostContextKeyStreamCommitWatch, true)
+}
+
+// DisarmStreamCommitWatch clears the watch once the attempt's first-chunk check has settled.
+// Bifrost-internal (set by core - DO NOT CALL THIS MANUALLY).
+func (bc *BifrostContext) DisarmStreamCommitWatch() {
+	bc.setReservedValue(BifrostContextKeyStreamCommitWatch, nil)
+}
+
+// ConsumeStreamCommitWatch reports whether the watch was armed and disarms it in the same
+// step, so at most one commit signal is sent per attempt. Like setReservedValue it bypasses
+// blockRestrictedWrites: the gate runs right after post-hooks, which hold that guard.
+func (bc *BifrostContext) ConsumeStreamCommitWatch() bool {
+	if bc.valueDelegate != nil {
+		return bc.valueDelegate.ConsumeStreamCommitWatch()
+	}
+	bc.valuesMu.Lock()
+	defer bc.valuesMu.Unlock()
+	armed, _ := bc.userValues[BifrostContextKeyStreamCommitWatch].(bool)
+	if armed {
+		bc.userValues[BifrostContextKeyStreamCommitWatch] = nil
+	}
+	return armed
 }
 
 // SetRoutingInfoSnapshot writes the routed-identity RoutingInfo snapshot,

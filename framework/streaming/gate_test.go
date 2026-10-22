@@ -2342,3 +2342,75 @@ func TestGate_ApprovedFullDrainWhilePausedThenResumeEnds(t *testing.T) {
 		t.Fatalf("gate state = %v after flusher exit, want Ended", state)
 	}
 }
+
+// A paused gate holding the first valid chunk of an attempt whose first-chunk check is
+// waiting sends exactly one commit marker, and the held chunks themselves stay buffered.
+func TestGate_PausedFirstChunkSendsOneCommitMarker(t *testing.T) {
+	a := newTestAccumulator(t)
+	ctx := schemas.NewBifrostContext(context.Background(), time.Time{})
+	ctx.ArmStreamCommitWatch()
+	ch := make(chan *schemas.BifrostStreamChunk, 8)
+	const traceID = "trace-commit-marker"
+	chunks := makeChunks(3)
+
+	a.PauseStream(traceID)
+	for _, c := range chunks {
+		if !a.GateSend(traceID, c, false, false, ch, ctx) {
+			t.Fatal("GateSend returned false while paused")
+		}
+	}
+
+	if len(ch) != 1 {
+		t.Fatalf("expected exactly one chunk on the channel, got %d", len(ch))
+	}
+	if got := <-ch; !schemas.IsStreamCommitMarker(got) {
+		t.Fatalf("expected the commit marker, got %+v", got)
+	}
+	if ctx.ConsumeStreamCommitWatch() {
+		t.Fatal("the gate must consume the commit watch")
+	}
+
+	a.ResumeStream(traceID)
+	for i, want := range chunks {
+		select {
+		case got := <-ch:
+			if got != want {
+				t.Fatalf("chunk %d: replayed %p, want %p", i, got, want)
+			}
+		case <-time.After(2 * time.Second):
+			t.Fatalf("chunk %d was never replayed after resume", i)
+		}
+	}
+}
+
+// Without an armed watch (no first-chunk check waiting, e.g. a later injected-tool turn or a
+// short-circuit stream) and for an error chunk, the gate sends no marker.
+func TestGate_PausedSendsNoCommitMarkerWhenUnarmedOrError(t *testing.T) {
+	cases := []struct {
+		name  string
+		armed bool
+		chunk *schemas.BifrostStreamChunk
+	}{
+		{name: "unarmed", armed: false, chunk: makeChunks(1)[0]},
+		{name: "error chunk", armed: true, chunk: &schemas.BifrostStreamChunk{BifrostError: &schemas.BifrostError{Error: &schemas.ErrorField{Message: "blocked"}}}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			a := newTestAccumulator(t)
+			ctx := schemas.NewBifrostContext(context.Background(), time.Time{})
+			if tc.armed {
+				ctx.ArmStreamCommitWatch()
+			}
+			ch := make(chan *schemas.BifrostStreamChunk, 8)
+			traceID := "trace-no-marker-" + tc.name
+			a.PauseStream(traceID)
+			a.GateSend(traceID, tc.chunk, false, false, ch, ctx)
+			if len(ch) != 0 {
+				t.Fatalf("expected no chunk on the channel, got %d", len(ch))
+			}
+			if tc.armed && !ctx.ConsumeStreamCommitWatch() {
+				t.Fatal("an error chunk must leave the watch armed")
+			}
+		})
+	}
+}

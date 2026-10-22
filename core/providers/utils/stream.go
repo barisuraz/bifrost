@@ -299,6 +299,9 @@ func replayStreamPreamble(
 				if !ok {
 					return
 				}
+				if schemas.IsStreamCommitMarker(chunk) {
+					continue
+				}
 				if !send(chunk) {
 					return
 				}
@@ -375,6 +378,15 @@ func CheckStreamPreambleForError(
 			}
 			if chunk == nil {
 				continue
+			}
+			if schemas.IsStreamCommitMarker(chunk) {
+				// A plugin holds output the upstream already produced: the stream has
+				// started, so commit it without waiting for the held chunks.
+				if !abort.Disarm() {
+					return nil, drain(), NewFirstTokenTimeoutError(abort.Timeout())
+				}
+				wrapped, done := replayStreamPreamble(ctx, key, buffer, nil)
+				return wrapped, done, nil
 			}
 			if isStreamStartupError(chunk.BifrostError) {
 				return nil, drain(), chunk.BifrostError
@@ -515,14 +527,21 @@ func CheckFirstStreamChunkForError(
 		return nil, drainInBackground(stream), NewFirstTokenTimeoutError(abort.Timeout())
 	}
 
-	// First chunk is valid data — wrap channel to re-inject it
+	// First chunk is valid data — wrap channel to re-inject it. A commit marker means a
+	// plugin holds valid output (see schemas.StreamCommitMarker); it is consumed here and
+	// never re-injected, nor forwarded if a late copy follows a real chunk.
 	done := make(chan struct{})
 	wrapped := make(chan *schemas.BifrostStreamChunk, max(cap(stream), 1))
-	wrapped <- firstChunk
+	if !schemas.IsStreamCommitMarker(firstChunk) {
+		wrapped <- firstChunk
+	}
 	go func() {
 		defer close(done)
 		defer close(wrapped)
 		for chunk := range stream {
+			if schemas.IsStreamCommitMarker(chunk) {
+				continue
+			}
 			select {
 			case wrapped <- chunk:
 			case <-ctx.Done():
