@@ -277363,6 +277363,46 @@
               ]
             }
           }
+        },
+        {
+          "name": "262.15 GET /passthrough/generic_echo/stream/1 - the word stream in a path does not select the streaming relay; the reply is buffered (generic passthrough)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// generic_echo has no streaming.paths glob and no route for /stream/*, and this GET carries no Accept: text/event-stream",
+                  "// and no body. The path's wording alone must not pick the streaming relay (which would forward a non-SSE body unread and",
+                  "// skip the response-side usage mapping), so the buffered handler serves it: no X-Accel-Buffering header, body intact.",
+                  "pm.test('generic relay: stream-named path relayed', function () { pm.expect(pm.response.code, 'failed: ' + pm.response.text().slice(0, 600)).to.eql(200); });",
+                  "pm.test('generic relay: buffered handler served a path that merely contains stream', function () { pm.expect(pm.response.headers.get('x-accel-buffering'), 'x-accel-buffering must be absent').to.not.eql('no'); });",
+                  "pm.test('generic relay: body forwarded', function () { pm.expect((pm.response.text() || '').length, 'body length').to.be.above(0); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/passthrough/generic_echo/stream/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "passthrough",
+                "generic_echo",
+                "stream",
+                "1"
+              ]
+            }
+          }
         }
       ]
     }
