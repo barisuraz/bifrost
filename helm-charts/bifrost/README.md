@@ -13,6 +13,7 @@ Official Helm charts for deploying [Bifrost](https://github.com/maximhq/bifrost)
 - Configurable request-body buffer pool limit via `bifrost.server.bodyBufferPoolLimitBytes`. Maps to `server.body_buffer_pool_limit_bytes` in config.json. Keep-alive connections free request-body buffers larger than this after each request instead of holding the largest body they ever read (default 4 MiB when unset; `0` means unlimited, the old behaviour).
 - Added `bifrost.client.skipAccessProfileUserVirtualKeyCreation` (`client.skip_access_profile_user_virtual_key_creation`), default `false`. Enterprise only: when `true`, a user's first access profile no longer issues them a virtual key.
 - Added `bifrost.client.skipAccessProfileUserVirtualKeyDeletion` (`client.skip_access_profile_user_virtual_key_deletion`), default `false`. Enterprise only: when `true`, removing a user's last access profile no longer deletes their virtual keys; they are kept as ordinary keys. Deleting the user still deletes them.
+- Added `syncAllUsers` to the Okta SCIM provider config (`bifrost.scim.config.syncAllUsers`, `scim_config.config.syncAllUsers`), default `true`. Chooses which Okta users directory sync keeps: every app-assigned user except suspended and deactivated ones, or (`false`) active users only. The chart's values schema and `config.schema.json` previously refused the key.
 
 ### 2.1.45
 
